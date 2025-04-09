@@ -1,68 +1,98 @@
-import streamlit as st
 import pandas as pd
-import plotly.express as px
+import streamlit as st
+import plotly.graph_objects as go
 
-st.set_page_config(layout="wide")
+# --- PAGE CONFIG ---
+st.set_page_config(
+    page_title="NEUCLIREGEN vs. Failed Therapies",
+    layout="wide",
+    page_icon="🧬"
+)
 
-st.title("🚀 NUCLIREGEN: Timeline of Progeria Treatments (2003–2025)")
+# --- HEADER ---
+st.title("🧬 NEUCLIREGEN vs. Historical Therapies for Progeria")
+st.markdown("### Comparative Dashboard of Efficacy, Risk, and Cost")
 
-# Timeline Data
-timeline_data = {
-    "Year": [
-        2003, 2006, 2010, 2013, 2015, 2017, 2020, 2021, 2023, 2025
+# --- DATA ---
+data = {
+    "Therapy": ["NEUCLIREGEN", "Lonafarnib", "CRISPR-Cas9", "Progerinina", "RNAi", "Base Editing"],
+    "Mechanism": [
+        "Nuclear nanobots that degrade progerin protein",
+        "Blocks farnesylation of progerin (FTase inhibitor)",
+        "Edits LMNA gene mutation (Cas9)",
+        "Inhibits progerin binding to nuclear lamina",
+        "Silences LMNA via siRNA molecules",
+        "Base pair substitution (A>G or C>T)"
     ],
-    "Treatment": [
-        "Genetic Discovery",
-        "Lonafarnib Preclinical",
-        "Lonafarnib Phase II",
-        "CRISPR (in vitro)",
-        "CRISPR (in vivo - mice)",
-        "Progerinina Discovery",
-        "Lonafarnib FDA Approval",
-        "CRISPR Early Human Trials",
-        "NUCLIREGEN Prototype",
-        "NUCLIREGEN Clinical Breakthrough"
-    ],
-    "Details": [
-        "🧬 Identification of LMNA gene mutation linked to progeria.",
-        "🧪 Initial animal testing on farnesyltransferase inhibitors.",
-        "📊 Limited success in extending lifespan in patients.",
-        "🔬 Gene editing success in Petri dish models.",
-        "🐭 Partial nuclear repair in progeric murine models.",
-        "💊 Molecule discovered to bind and neutralize progerin.",
-        "✅ FDA approval, life extension by ~2.5 years.",
-        "⚠️ Trials show immune response, off-target editing.",
-        "🤖 Nanobot prototype created to target progerin inside nucleus.",
-        "🏆 Achieves accurate, safe rejuvenation in clinical trials."
+    "Efficacy (%)": [85, 25, 40, 30, 20, 45],
+    "Risk Level": ["Low", "Medium", "High", "Medium", "Medium", "High"],
+    "Estimated Cost (USD)": [8000, 120000, 500000, 150000, 100000, 400000],
+    "Failure Reason": [
+        "No failures reported in Phase I/II trials",
+        "Does not eliminate progerin, only reduces toxicity",
+        "Off-target mutations, immunogenic viral vectors",
+        "Weak in vivo stability, interferes with lamin B",
+        "Short half-life, poor tissue diffusion",
+        "Potential off-target base edits"
     ]
 }
 
-df = pd.DataFrame(timeline_data)
+df = pd.DataFrame(data)
 
-# Plotly timeline
-fig = px.timeline(
-    df,
-    x_start="Year",
-    x_end=[year + 0.8 for year in df["Year"]],
-    y="Treatment",
-    color="Treatment",
-    hover_name="Treatment",
-    hover_data={"Details": True, "Year": False},
-    title="🧭 Evolution of Progeria Treatments (2003–2025)",
-    color_discrete_sequence=px.colors.qualitative.Set3
-)
+# --- DISPLAY TABLE ---
+st.subheader("📄 Full Comparative Table")
+st.dataframe(df, use_container_width=True)
 
-fig.update_yaxes(autorange="reversed")
+# --- RADAR CHART ---
+st.subheader("📊 Interactive Radar Chart")
+
+risk_map = {"Low": 1, "Medium": 2, "High": 3}
+df["Risk Numeric"] = df["Risk Level"].map(risk_map)
+
+fig = go.Figure()
+
+fig.add_trace(go.Scatterpolar(
+    r=df["Efficacy (%)"],
+    theta=df["Therapy"],
+    fill='toself',
+    name='Efficacy (%)',
+    marker=dict(color='limegreen')
+))
+fig.add_trace(go.Scatterpolar(
+    r=df["Risk Numeric"],
+    theta=df["Therapy"],
+    fill='toself',
+    name='Risk Level (1=Low, 3=High)',
+    marker=dict(color='crimson')
+))
+fig.add_trace(go.Scatterpolar(
+    r=df["Estimated Cost (USD)"] / 10000,  # Normalized
+    theta=df["Therapy"],
+    fill='toself',
+    name='Cost (x10K USD)',
+    marker=dict(color='dodgerblue')
+))
+
 fig.update_layout(
-    height=700,
-    font=dict(family="Roboto Mono", size=14, color="#333333"),
-    title_font_size=24,
-    plot_bgcolor="#F0F2F6",
-    paper_bgcolor="#F0F2F6",
-    margin=dict(l=30, r=30, t=60, b=30),
-    hoverlabel=dict(bgcolor="white", font_size=13, font_family="Roboto Mono"),
-    showlegend=False
+    polar=dict(
+        radialaxis=dict(
+            visible=True,
+            showticklabels=True,
+            tickfont=dict(size=12),
+            gridcolor="gray",
+            gridwidth=1,
+        ),
+        bgcolor="#f5f5f5"
+    ),
+    template="plotly_dark",
+    title="NEUCLIREGEN vs. Other Therapies (Efficacy - Risk - Cost)",
+    showlegend=True,
+    legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5)
 )
 
-# Display
 st.plotly_chart(fig, use_container_width=True)
+
+# --- FOOTNOTE ---
+st.markdown("""
+> 🧠 **Note:** NEUCLIREGEN is the only platform that **restores nuclear function** without altering DNA or relying on viral vectors, making it the **most ethical and safest therapeutic strategy** in regenerative nanomedicine.
+""")
